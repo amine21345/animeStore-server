@@ -13,7 +13,7 @@ app.use(express.json()); // Parse JSON body
 // Routes
 app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/categories", require("./routes/categoryRoutes"));
-
+app.use("/api/mail", require("./routes/mailRoutes"));
 // DB Connection
 mongoose
   .connect(process.env.MONGO_URI)
