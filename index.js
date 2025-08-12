@@ -14,6 +14,8 @@ app.use(express.json()); // Parse JSON body
 app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/categories", require("./routes/categoryRoutes"));
 app.use("/api/mail", require("./routes/mailRoutes"));
+app.use("/api/users", require("./routes/userRoutes")); // Add userRoutes
+
 // DB Connection
 mongoose
   .connect(process.env.MONGO_URI)
