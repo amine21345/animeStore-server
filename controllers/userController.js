@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 
 // Register new user
@@ -31,7 +31,12 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
     // For now, do not return JWT
-  res.status(200).json({ message: "Login successful", user: { id: user._id, name: user.name, email: user.email } });
+    res
+      .status(200)
+      .json({
+        message: "Login successful",
+        user: { id: user._id, name: user.name, email: user.email },
+      });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

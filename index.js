@@ -15,6 +15,7 @@ app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/categories", require("./routes/categoryRoutes"));
 app.use("/api/mail", require("./routes/mailRoutes"));
 app.use("/api/users", require("./routes/userRoutes")); // Add userRoutes
+app.use("/api/orders", require("./routes/orderRoutes")); // Add orderRoutes
 
 // DB Connection
 mongoose
