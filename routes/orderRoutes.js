@@ -9,7 +9,7 @@ router.get("/", orderController.getOrders);
 // Get order by ID
 router.get("/:id", orderController.getOrderById);
 // Update order status
-router.patch("/:id/status", orderController.updateOrderStatus);
+router.put("/:id/status", orderController.updateOrderStatus);
 // Delete order
 router.delete("/:id", orderController.deleteOrder);
 

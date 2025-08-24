@@ -1,6 +1,33 @@
 const Joi = require("joi");
 
-// Product validation schema
+// Reusable URL validator
+const urlItem = Joi.string().uri().messages({
+  "string.uri": "Image must be a valid URL",
+  "string.base": "Image must be a valid URL",
+});
+
+// Accept either an array of URLs (min 1) or a single URL
+const imageField = Joi.alternatives()
+  .try(
+    Joi.array().items(urlItem).min(1).messages({
+      "array.base": "Image must be an array of URLs",
+      "array.min": "At least one image URL is required",
+    }),
+    urlItem // single URL
+  )
+  .custom((value, helpers) => {
+    // optional: normalize a single URL to an array so downstream is always array
+    if (typeof value === "string") return [value];
+    return value;
+  });
+
+const objectId = Joi.string()
+  .pattern(/^[0-9a-fA-F]{24}$/)
+  .messages({
+    "string.pattern.base": "Category ID must be a valid MongoDB ObjectId",
+  });
+
+// CREATE
 const productSchema = Joi.object({
   name: Joi.string().trim().required().min(1).max(255).messages({
     "string.empty": "Product name is required",
@@ -16,10 +43,10 @@ const productSchema = Joi.object({
     "any.required": "Product description is required",
   }),
 
-  price: Joi.number().required().min(0).positive().messages({
+  // Allow 0 if your DB allows min: 0. Remove .min(0) and keep .positive() if you want strictly > 0.
+  price: Joi.number().required().min(0).messages({
     "number.base": "Price must be a number",
     "number.min": "Price cannot be negative",
-    "number.positive": "Price must be a positive number",
     "any.required": "Price is required",
   }),
 
@@ -31,18 +58,14 @@ const productSchema = Joi.object({
     "array.base": "Colors must be an array of strings",
   }),
 
-  categorieId: Joi.string()
-    .required()
-    .pattern(/^[0-9a-fA-F]{24}$/)
-    .messages({
-      "string.empty": "Category ID is required",
-      "string.pattern.base": "Category ID must be a valid MongoDB ObjectId",
-      "any.required": "Category ID is required",
-    }),
+  // NOTE: your field is spelled `categorieId` (with 'ie'), keep it consistent
+  categorieId: objectId.required().messages({
+    "string.empty": "Category ID is required",
+    "any.required": "Category ID is required",
+  }),
 
-  image: Joi.string().required().uri().messages({
-    "string.empty": "Image URL is required",
-    "string.uri": "Image must be a valid URL",
+  // Make this accept array or single url; normalized to array by custom() above
+  image: imageField.required().messages({
     "any.required": "Image URL is required",
   }),
 
@@ -52,7 +75,7 @@ const productSchema = Joi.object({
   }),
 });
 
-// Update product validation schema (all fields optional except ID)
+// UPDATE (all optional)
 const updateProductSchema = Joi.object({
   name: Joi.string().trim().min(1).max(255).messages({
     "string.min": "Product name must be at least 1 character long",
@@ -64,10 +87,10 @@ const updateProductSchema = Joi.object({
     "string.max": "Product description cannot exceed 1000 characters",
   }),
 
-  price: Joi.number().min(0).positive().messages({
+  // Keep aligned with create
+  price: Joi.number().min(0).messages({
     "number.base": "Price must be a number",
     "number.min": "Price cannot be negative",
-    "number.positive": "Price must be a positive number",
   }),
 
   sizes: Joi.array().items(Joi.string().trim()).messages({
@@ -78,14 +101,12 @@ const updateProductSchema = Joi.object({
     "array.base": "Colors must be an array of strings",
   }),
 
-  categorieId: Joi.string()
-    .pattern(/^[0-9a-fA-F]{24}$/)
-    .messages({
-      "string.pattern.base": "Category ID must be a valid MongoDB ObjectId",
-    }),
+  categorieId: objectId.messages({
+    "string.pattern.base": "Category ID must be a valid MongoDB ObjectId",
+  }),
 
-  image: Joi.string().uri().messages({
-    "string.uri": "Image must be a valid URL",
+  image: imageField.messages({
+    "array.base": "Image must be an array of URLs",
   }),
 
   quantity_sold: Joi.number().min(0).messages({
@@ -94,14 +115,9 @@ const updateProductSchema = Joi.object({
   }),
 });
 
-// Validation functions
-const validateProduct = (data) => {
-  return productSchema.validate(data, { abortEarly: false });
-};
-
-const validateUpdateProduct = (data) => {
-  return updateProductSchema.validate(data, { abortEarly: false });
-};
+const validateProduct = (data) => productSchema.validate(data, { abortEarly: false });
+const validateUpdateProduct = (data) =>
+  updateProductSchema.validate(data, { abortEarly: false });
 
 module.exports = {
   validateProduct,
