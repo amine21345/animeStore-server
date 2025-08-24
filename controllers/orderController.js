@@ -1,4 +1,5 @@
 const Order = require("../models/orderModel");
+const { customerOrderStatusTemplate } = require("../template/emailTemplates");
 const sendEmail = require("../config/mailer");
 const {
   customerOrderTemplate,
@@ -71,16 +72,38 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// Update order status
+// Update order status and notify client
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const order = await Order.findByIdAndUpdate(
+    // Find and update order
+    let order = await Order.findByIdAndUpdate(
       req.params.id,
       { status },
       { new: true }
-    );
+    ).populate({ path: "items.product", select: "name price" });
     if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // Try to get locale from order (if present), fallback to en
+    const locale = (order.locale || "en").toLowerCase();
+    const safeLocale = ["en", "fr", "ar"].includes(locale) ? locale : "en";
+
+    // Email subject map
+    const subjectMap = {
+      en: (id) => `Order #${id} Status Update`,
+      fr: (id) => `Mise à jour du statut de la commande #${id}`,
+      ar: (id) => `تحديث حالة الطلب رقم ${id}`,
+    };
+
+    // Send email to client with styled template
+    if (order.email) {
+      await sendEmail({
+        to: order.email,
+        subject: subjectMap[safeLocale](order._id),
+        html: customerOrderStatusTemplate(order, status, safeLocale),
+      });
+    }
+
     res.status(200).json(order);
   } catch (error) {
     res.status(400).json({ message: error.message });

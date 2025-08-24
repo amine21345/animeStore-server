@@ -193,4 +193,77 @@ function adminOrderTemplate(order, locale = "en") {
   </html>`;
 }
 
-module.exports = { customerOrderTemplate, adminOrderTemplate };
+function customerOrderStatusTemplate(order, newStatus, locale = "en") {
+  const d = getDict(locale);
+  const dir = locale === "ar" ? "rtl" : "ltr";
+  const align = dir === "rtl" ? "right" : "left";
+  // Status translation map
+  const statusMap = {
+    en: {
+      pending: "Pending",
+      processing: "Processing",
+      shipped: "Shipped",
+      delivered: "Delivered",
+      cancelled: "Cancelled",
+    },
+    fr: {
+      pending: "En attente",
+      processing: "En traitement",
+      shipped: "Expédiée",
+      delivered: "Livrée",
+      cancelled: "Annulée",
+    },
+    ar: {
+      pending: "قيد الانتظار",
+      processing: "قيد المعالجة",
+      shipped: "تم الشحن",
+      delivered: "تم التوصيل",
+      cancelled: "ملغي",
+    },
+  };
+  const statusText = statusMap[locale]?.[newStatus] || newStatus;
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head><meta charset="utf-8"><title>${d.orderConfirmation}</title></head>
+  <body style="direction:${dir};text-align:${align};font-family: Arial, sans-serif; background-color: #f9f9f9; margin:0; padding:0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9f9f9; padding:20px 0;">
+      <tr>
+        <td align="center">
+          <table width="600" cellpadding="0" cellspacing="0" style="background:#fff; border-radius:8px; padding:24px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+            <tr>
+              <td align="center" style="padding-bottom:20px;">
+                <h1 style="margin:0; font-size:22px; color:#333;">${
+                  d.orderConfirmation
+                }</h1>
+                <p style="margin:6px 0; color:#555;">Your order status has been updated.</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p><strong>${d.orderId}:</strong> ${order._id}</p>
+                <p><strong>${d.status}:</strong> <b>${statusText}</b></p>
+                <p><strong>${d.total}:</strong> $${order.totalAmount}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top:20px; text-align:center;">
+                <p style="margin:0; color:#777;">${
+                  d.questions
+                } <a href="mailto:support@example.com" style="color:#0066cc;">support@example.com</a></p>
+              </td>
+            </tr>
+          </table>
+          <p style="font-size:12px; color:#aaa; margin-top:12px;">© ${new Date().getFullYear()} Your Store. All rights reserved.</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+  </html>`;
+}
+
+module.exports = {
+  customerOrderTemplate,
+  adminOrderTemplate,
+  customerOrderStatusTemplate,
+};
